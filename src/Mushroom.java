@@ -44,6 +44,7 @@ public class Mushroom {
      *                              urban=u,waste=w,woods=d
      */
     String[] attr = new String[23];
+    boolean edible;
     
     /**
      * Receive the attributes and assign them
@@ -52,8 +53,10 @@ public class Mushroom {
      *          The attributes of the mushroom
      */
     public Mushroom(String[] att){
-        for(int i = 0; i < att.length; i++){
-            this.attr[i] = att[i];
+        for(int i = 0; i < att.length-1; i++){
+            this.attr[i] = att[i+1];
         }
+        
+        this.edible = att[0].equals("e");
     }
 }
