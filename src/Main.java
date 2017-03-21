@@ -3,12 +3,13 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Scanner;
 
 
 /**
  *
- * @author Xazav
+ * @author Joseph Ryan
  */
 public class Main {
     
@@ -53,7 +54,6 @@ public class Main {
             System.out.println("> GENERATING TRAIT DATA...");
             for(int i = 0; i < traits.length; i++){
                 traits[i] = new Trait(mushrooms,i);
-                //System.out.print(traits[i].toString());
             }
         } catch (FileNotFoundException ex) {
             System.out.println("- ERROR: Data File"+dataFile.getName()+" not found");
@@ -62,7 +62,9 @@ public class Main {
         //Build tree
         if(args[1].equals("0")){
             System.out.println("> GENERATING TREE (probability of error)...");
-            probTree(mushrooms,traits);
+            Node root = probTree(mushrooms,traits, null);
+            System.out.println(root.name);
+            printTree(root,0);
         }else{
             System.out.println("> GENERATING TREE (entropy)...");
             entropyTree(mushrooms,traits);
@@ -72,24 +74,68 @@ public class Main {
         System.out.println("> CLOSING DECISON TREE...");
     }
     
+    private static void printTree(Node node, int i){ 
+        for(Branch b: node.children){
+            System.out.println(String.join("", Collections.nCopies(i, "  "))+"  --- "+b.name+" --> "+b.child.name);
+            printTree(b.child, i+1);
+        }
+    }
     
-    public static void probTree(ArrayList<Mushroom> mushrooms, Trait[] traits){
-        DecimalFormat df = new DecimalFormat("#.00");
+    public static Node probTree(ArrayList<Mushroom> mushrooms, Trait[] traits, Node parent){
+        DecimalFormat df = new DecimalFormat("#.000");
         
         //Calculate the probability of Error per trait
-        System.out.println("> Trait prob...");
-        for(Trait t: traits){
-            double per = 0;
-            for(int i = 0; i < t.size; i++){
-                per += t.prob(i);
-            }
-            System.out.println("  -- "+t.traitNum()+": "+df.format(per));
+        System.out.println("> <"+(parent!=null?parent.name:"start")+"> Trait prob ");
+        int low = 0;
+        for(int i = 0; i < traits.length; i++){
+            if(i%4 == 0 && i!=0) System.out.println();
+            traits[i].calculate(mushrooms);
+            if(traits[i].percentError <= traits[low].percentError) low = i;
+            System.out.print(" | "+traits[i].traitNum()+": "+df.format(traits[i].percentError));
+            
         }
+        
+        //Select lowest error node
+        System.out.println("\n> Node selected: <"+traits[low].traitNum()+">\n");
+        Node node = new Node(""+traits[low].traitNum(),parent);
+        
+        //Create children branches
+        for(int i = 0; i < traits[low].size; i++){
+            //Check if 0% or 100%
+            if(traits[low].prob(i) == 0)
+                node.children.add(new Branch(traits[low].type(i),new Node("EDIBLE",node)));
+            else if(traits[low].prob(i) == 1)
+                node.children.add(new Branch(traits[low].type(i),new Node("POISONOUS",node)));
+            else
+                node.children.add(new Branch(traits[low].type(i),probTree(removeMushrooms(mushrooms,traits[low],i),removeTrait(traits,low),node)));
+        }
+        
+        return node;
+    }
+    
+    public static ArrayList<Mushroom> removeMushrooms(ArrayList<Mushroom> mushrooms, Trait t, int i){
+        ArrayList<Mushroom> ret = new ArrayList<>();
+        
+        for(Mushroom m: mushrooms){
+            if(m.attr[t.trait].equals(t.type(i)))
+                ret.add(m);
+        }
+        
+        return ret;
+    }
+    
+    public static Trait[] removeTrait(Trait[] traits, int low){
+        Trait[] ret = new Trait[traits.length-1];
+        
+        for(int i = 0; i < ret.length; i++){
+            ret[i] = traits[(i>=low)?i+1:i];
+        }
+        
+        return ret;
     }
     
     public static void entropyTree(ArrayList<Mushroom> mushrooms, Trait[] traits){
         
     }
-    
-    
+       
 }

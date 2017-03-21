@@ -3,7 +3,7 @@ import java.util.ArrayList;
 
 /**
  *
- * @author user
+ * @author Joseph Ryan
  */
 public class Trait{
 
@@ -34,15 +34,16 @@ public class Trait{
     
     int sum;
     int trait;
-    int size = 0;
+    int size;
+    double percentError;
     String[][] counts;
 
     public Trait(ArrayList<Mushroom> mushrooms, int trait){
         this.trait = trait;
-        calculateMush(mushrooms);
+        //calculateMush(mushrooms);
     }
     
-    public void calculateMush(ArrayList<Mushroom> mushrooms){
+    public void calculate(ArrayList<Mushroom> mushrooms){
         counts = new String[Integer.parseInt(traitType[trait][1])][3];
 
         //Collect data
@@ -62,19 +63,33 @@ public class Trait{
         }
 
         //Store additional data
+        size = 0;
+        sum = 0;
         for(int i = 0; i < counts.length; i++){
             if(counts[i][1]==null) break;
             size++;
             sum+=Integer.parseInt(counts[i][1]);
         }
+        
+        //Calculate Percent error
+        this.percentError = 0;
+        for(int i = 0; i < size; i++){
+            this.percentError += prob(i);
+        }
+        
+        if(this.percentError==0 || this.percentError==1)
+            System.out.println("TEST");
     }
     
     public String name(){
         return traitType[trait][0];
     }
     
-    public int traitNum(){
-        return trait+1;
+    public String traitNum(){
+        if(trait+1 < 10)
+            return "0"+(trait+1);
+        else
+            return ""+(trait+1);
     }
 
     public String type(int i){

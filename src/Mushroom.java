@@ -1,7 +1,7 @@
 
 /**
  *
- * @author Xazav
+ * @author Joseph Ryan
  */
 public class Mushroom {
     
