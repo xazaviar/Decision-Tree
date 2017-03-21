@@ -7,54 +7,84 @@ import java.util.ArrayList;
  */
 public class Trait{
 
-    final String[][] traitType = {//{"edibility"                ,"2"},
-                                 {"cap-shape"                ,"6"},
-                                 {"cap-surface"              ,"4"},
-                                 {"cap-color"                ,"10"},
-                                 {"bruises?"                 ,"2"},
-                                 {"odor"                     ,"9"},
-                                 {"gill-attachment"          ,"4"},
-                                 {"gill-spacing"             ,"3"},
-                                 {"gill-size"                ,"2"},
-                                 {"gill-color"               ,"12"},
-                                 {"stalk-shape"              ,"2"},
-                                 {"stalk-root"               ,"7"},
-                                 {"stalk-surface-above-ring" ,"4"},
-                                 {"stalk-surface-below-ring" ,"4"},
-                                 {"stalk-color-above-ring"   ,"9"},
-                                 {"stalk-color-below-ring"   ,"9"},
-                                 {"veil-type"                ,"2"},
-                                 {"veil-color"               ,"4"},
-                                 {"ring-number"              ,"3"},
-                                 {"ring-type"                ,"9"},
-                                 {"spore-print-color"        ,"9"},
-                                 {"population"               ,"6"},
-                                 {"habitat"                  ,"7"}};
+    final String[] traitType = {//{"edibility"                ,"2"},
+                                 "cap-shape",
+                                 "cap-surface",
+                                 "cap-color",
+                                 "bruises?",
+                                 "odor",
+                                 "gill-attachment",
+                                 "gill-spacing",
+                                 "gill-size",
+                                 "gill-color",
+                                 "stalk-shape",
+                                 "stalk-root",
+                                 "stalk-surface-above-ring",
+                                 "stalk-surface-below-ring",
+                                 "stalk-color-above-ring",
+                                 "stalk-color-below-ring",
+                                 "veil-type",
+                                 "veil-color",
+                                 "ring-number",
+                                 "ring-type",
+                                 "spore-print-color",
+                                 "population",
+                                 "habitat"};
     
+    final String[][] traitOpt = {{"b","c","x","f","k","s"},
+                                 {"f","g","y","s"},
+                                 {"n","b","c","g","r","p","u","e","w","y"},
+                                 {"t","f"},
+                                 {"a","l","c","y","f","m","n","p","s"},
+                                 {"a","d","f","n"},
+                                 {"c","w","d"},
+                                 {"b","n"},
+                                 {"k","n","b","h","g","r","o","p","u","e","w","y"},
+                                 {"e","t"},
+                                 {"b","c","u","e","z","r","m"},
+                                 {"f","y","k","s"},
+                                 {"f","y","k","s"},
+                                 {"n","b","c","g","o","p","e","w","y"},
+                                 {"n","b","c","g","o","p","e","w","y"},
+                                 {"p","u"},
+                                 {"n","o","w","y"},
+                                 {"n","o","t"},
+                                 {"c","e","f","l","n","p","s","z"},
+                                 {"k","n","b","h","r","o","u","w","y"},
+                                 {"a","c","n","s","v","y"},
+                                 {"g","l","m","p","u","w","d"}};
     
     int sum;
-    int trait;
     int size;
+    int trait;
     double percentError;
     String[][] counts;
 
     public Trait(ArrayList<Mushroom> mushrooms, int trait){
         this.trait = trait;
+        counts = new String[traitOpt[trait].length][3];
+        this.size = traitOpt[trait].length;
         //calculateMush(mushrooms);
     }
     
     public void calculate(ArrayList<Mushroom> mushrooms){
-        counts = new String[Integer.parseInt(traitType[trait][1])][3];
-
+        //Clear Counts Array
+        for(int i = 0; i < traitOpt[trait].length; i++){
+            counts[i][0] = traitOpt[trait][i];
+            counts[i][1] = "0";
+            counts[i][2] = "0";
+        }
+        
         //Collect data
         for(Mushroom m: mushrooms){
             for(int i = 0; i < counts.length; i++){
-                if(counts[i][0]==null){
-                    counts[i][0] = m.attr[trait];
-                    counts[i][1] = "1";
-                    counts[i][2] = (m.edible?"1":"0");
-                    break;
-                }else if(counts[i][0].equals(m.attr[trait])){
+//                if(counts[i][0]==null){
+//                    counts[i][0] = m.attr[trait];
+//                    counts[i][1] = "1";
+//                    counts[i][2] = (m.edible?"1":"0");
+//                    break;
+//                }else 
+                if(counts[i][0].equals(m.attr[trait])){
                     counts[i][1] = ""+(Integer.parseInt(counts[i][1])+1);
                     counts[i][2] = (m.edible?""+(Integer.parseInt(counts[i][2])+1):""+Integer.parseInt(counts[i][2]));
                     break;
@@ -63,26 +93,25 @@ public class Trait{
         }
 
         //Store additional data
-        size = 0;
         sum = 0;
         for(int i = 0; i < counts.length; i++){
-            if(counts[i][1]==null) break;
-            size++;
+            //if(counts[i][1]==null) break;
+            //size++;
             sum+=Integer.parseInt(counts[i][1]);
         }
         
         //Calculate Percent error
         this.percentError = 0;
-        for(int i = 0; i < size; i++){
+        for(int i = 0; i < traitOpt[trait].length; i++){
             this.percentError += prob(i);
         }
         
-        if(this.percentError==0 || this.percentError==1)
-            System.out.println("TEST");
+//        if(this.percentError==0 || this.percentError==1)
+//            System.out.println("TEST");
     }
     
     public String name(){
-        return traitType[trait][0];
+        return traitType[trait];
     }
     
     public String traitNum(){
@@ -102,7 +131,7 @@ public class Trait{
     
     public double prob(int i){
         double select = 1.0*Integer.parseInt(counts[i][1])/sum;
-        double edible = 1.0*Integer.parseInt(counts[i][2])/sum;
+        double edible = (Integer.parseInt(counts[i][2])/sum>.5?1.0*(sum-Integer.parseInt(counts[i][2]))/sum:1.0*Integer.parseInt(counts[i][2])/sum);
         return select*edible;
     }
 
@@ -110,8 +139,8 @@ public class Trait{
         DecimalFormat df = new DecimalFormat("#.00");
         String ret = "";
 
-        ret+=("> Data Distribution for "+traitType[trait][0]+": ")+"\n";
-        for(int i = 0; i < size; i++){
+        ret+=("> Data Distribution for "+traitType[trait]+": ")+"\n";
+        for(int i = 0; i < traitOpt[trait].length; i++){
             ret+=("  -- "+counts[i][0]+": "+counts[i][1]+" ("+df.format(100.0*count(i)/sum)+"%)")+"\n";
         }
         ret+=("  -- total: "+(sum)+" instances")+"\n";
