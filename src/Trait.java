@@ -7,29 +7,13 @@ import java.util.ArrayList;
  */
 public class Trait{
 
-    final String[] traitType = {//{"edibility"                ,"2"},
-                                 "cap-shape",
-                                 "cap-surface",
-                                 "cap-color",
-                                 "bruises?",
-                                 "odor",
-                                 "gill-attachment",
-                                 "gill-spacing",
-                                 "gill-size",
-                                 "gill-color",
-                                 "stalk-shape",
-                                 "stalk-root",
-                                 "stalk-surface-above-ring",
-                                 "stalk-surface-below-ring",
-                                 "stalk-color-above-ring",
-                                 "stalk-color-below-ring",
-                                 "veil-type",
-                                 "veil-color",
-                                 "ring-number",
-                                 "ring-type",
-                                 "spore-print-color",
-                                 "population",
-                                 "habitat"};
+    final String[] traitType = {"cap-shape","cap-surface","cap-color","bruises?",
+                                "odor","gill-attachment","gill-spacing","gill-size",
+                                "gill-color","stalk-shape","stalk-root",
+                                "stalk-surface-above-ring","stalk-surface-below-ring",
+                                "stalk-color-above-ring","stalk-color-below-ring",
+                                "veil-type","veil-color","ring-number","ring-type",
+                                "spore-print-color","population","habitat"};
     
     final String[][] traitOpt = {{"b","c","x","f","k","s"},
                                  {"f","g","y","s"},
@@ -78,12 +62,6 @@ public class Trait{
         //Collect data
         for(Mushroom m: mushrooms){
             for(int i = 0; i < counts.length; i++){
-//                if(counts[i][0]==null){
-//                    counts[i][0] = m.attr[trait];
-//                    counts[i][1] = "1";
-//                    counts[i][2] = (m.edible?"1":"0");
-//                    break;
-//                }else 
                 if(counts[i][0].equals(m.attr[trait])){
                     counts[i][1] = ""+(Integer.parseInt(counts[i][1])+1);
                     counts[i][2] = (m.edible?""+(Integer.parseInt(counts[i][2])+1):""+Integer.parseInt(counts[i][2]));
@@ -94,20 +72,15 @@ public class Trait{
 
         //Store additional data
         sum = 0;
-        for(int i = 0; i < counts.length; i++){
-            //if(counts[i][1]==null) break;
-            //size++;
+        for(int i = 0; i < size; i++){
             sum+=Integer.parseInt(counts[i][1]);
         }
         
         //Calculate Percent error
         this.percentError = 0;
-        for(int i = 0; i < traitOpt[trait].length; i++){
+        for(int i = 0; i < size; i++){
             this.percentError += prob(i);
         }
-        
-//        if(this.percentError==0 || this.percentError==1)
-//            System.out.println("TEST");
     }
     
     public String name(){

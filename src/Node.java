@@ -8,12 +8,9 @@ import java.util.ArrayList;
  */
 public class Node {
     ArrayList<Branch> children = new ArrayList<>();
-    Node parent;
-    
     String name;
     
-    public Node(String name, Node parent){
+    public Node(String name){
         this.name = name;
-        this.parent = parent;
     }
 }

@@ -62,7 +62,8 @@ public class Main {
         //Build tree
         if(args[1].equals("0")){
             System.out.println("> GENERATING TREE (probability of error)...");
-            Node root = probTree(mushrooms,traits, null);
+            //Node root = probTree(mushrooms,traits, null);
+            Node root = DTL(mushrooms,traits,mushrooms);
             System.out.println(root.name);
             printTree(root,0);
             System.out.println("Number of nodes: "+numberOfNodes);
@@ -84,19 +85,19 @@ public class Main {
         }
     }
     
-    public static Node probTree(ArrayList<Mushroom> mushrooms, Trait[] traits, Node parent){
+    public static Node probTree(ArrayList<Mushroom> mushrooms, Trait[] traits){
         DecimalFormat df = new DecimalFormat("#.000");
         
         int same = allSame(mushrooms);
         if(same!=-1){
-            return new Node((same==1?"EDIBLE":"POISONOUS"),parent);
+            return new Node((same==1?"EDIBLE":"POISONOUS"));
         }
         
         if(mushrooms.size()==0)
             System.out.println("ERROR");
         
         //Calculate the probability of Error per trait
-        System.out.println("> <"+(parent!=null?parent.name:"start")+"> Trait prob ");
+        //System.out.println("> <"+(parent!=null?parent.name:"start")+"> Trait prob ");
         int opt = 0;
         for(int i = 0; i < traits.length; i++){
             if(i%4 == 0 && i!=0) System.out.println();
@@ -108,14 +109,14 @@ public class Main {
         
         //Select lowest error node
         System.out.println("\n> Node selected: <"+traits[opt].traitNum()+">\n");
-        Node node = new Node(""+traits[opt].traitNum(),parent);
+        Node node = new Node(""+traits[opt].traitNum());
         
         //Create children branches
         for(int i = 0; i < traits[opt].size; i++){
             ArrayList<Mushroom> tempM = removeMushrooms(mushrooms,traits[opt],i);
             Trait[] tempT = removeTrait(traits,opt);
             if(tempM.size()>0)
-                node.children.add(new Branch(traits[opt].type(i),probTree(tempM,tempT,node)));
+                node.children.add(new Branch(traits[opt].type(i),probTree(tempM,tempT)));
 //            else if(traits[opt].prob(i) == 0)
 //                node.children.add(new Branch(traits[opt].type(i),new Node("EDIBLE",node)));
 //            else if(traits[opt].prob(i) == 1)
@@ -124,6 +125,54 @@ public class Main {
         }
         
         return node;
+    }
+    
+    public static Node DTL(ArrayList<Mushroom> examples, Trait[] attr, ArrayList<Mushroom> parent_examples){
+        Node node;
+        
+        if(examples.isEmpty())
+            return plurality_value(parent_examples);
+        else if(allSame(examples)!=-1)
+            return new Node((allSame(examples)==1?"EDIBLE":"POISONOUS"));
+        else if(attr.length==0)
+            return plurality_value(examples);
+        else{
+            Trait A = importance(attr,examples);
+            node = new Node(A.traitNum());
+            for(int i = 0; i < A.size; i++){
+                ArrayList<Mushroom> exs = removeMushrooms(examples,A,i);
+                node.children.add(new Branch(A.type(i),DTL(exs,removeTrait(attr,A.trait),examples)));
+            }
+        }
+        
+        return node;
+    }
+    
+    public static Node plurality_value(ArrayList<Mushroom> examples){
+        int e = 0, p = 0;
+        for(Mushroom m: examples){
+            if(m.edible) e++;
+            else p++;
+        }
+        return new Node((e>p?"EDIBLE":"POISONOUS"));
+    }
+    
+    public static Trait importance(Trait[] attr, ArrayList<Mushroom> examples){
+        DecimalFormat df = new DecimalFormat("#.000");
+        
+        System.out.println("> Looking at Attributes...");
+        int opt = 0;
+        for(int i = 0; i < attr.length; i++){
+            if(i%4 == 0 && i!=0) System.out.println();
+            attr[i].calculate(examples);
+            if(attr[i].percentError < attr[opt].percentError) opt = i;
+            System.out.print(" | "+attr[i].traitNum()+": "+df.format(attr[i].percentError));
+            
+        }
+        
+        //Select lowest error attribute
+        System.out.println("\n> Attribute selected: <"+attr[opt].traitNum()+">\n");
+        return attr[opt];
     }
     
     public static int allSame(ArrayList<Mushroom> mushrooms){
@@ -150,11 +199,14 @@ public class Main {
         return ret;
     }
     
-    public static Trait[] removeTrait(Trait[] traits, int low){
+    public static Trait[] removeTrait(Trait[] traits, int trait){
         Trait[] ret = new Trait[traits.length-1];
         
+        int found = 0;
+        
         for(int i = 0; i < ret.length; i++){
-            ret[i] = traits[(i>=low)?i+1:i];
+            if(traits[i].trait==trait) found = 1;
+            ret[i] = traits[i+found];
         }
         
         return ret;
