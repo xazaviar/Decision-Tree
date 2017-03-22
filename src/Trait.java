@@ -42,6 +42,7 @@ public class Trait{
     int size;
     int trait;
     double percentError;
+    double gain;
     String[][] counts;
 
     public Trait(ArrayList<Mushroom> mushrooms, int trait){
@@ -74,20 +75,29 @@ public class Trait{
         //Store additional data
         sum = 0;
         size = 0;
+        int posSum = 0;
         for(int i = 0; i < counts.length; i++){
             if(counts[i][1]==null) break;
             size++;
             sum+=Integer.parseInt(counts[i][1]);
+            posSum+=Integer.parseInt(counts[i][2]);
         }
         
             
         //Calculate Percent error
         this.percentError = 0;
         for(int i = 0; i < size; i++){
-            
-            //if(trait==0)System.out.println(type(i)+": "+prob(i));
             this.percentError += prob(i);
         }
+        
+        //Calculate the gain
+        this.gain = Entropy2(1.0*posSum/sum);//Entropy((1.0*posSum/sum),1.0*(1-posSum/sum));
+        for(int i = 0; i < size; i++){
+            double num = 1.0*Integer.parseInt(counts[i][2])/Integer.parseInt(counts[i][1]);
+            double ent = Entropy2(num);
+            this.gain= this.gain-((1.0*Integer.parseInt(counts[i][1]))/sum*ent);
+        }
+        System.out.print("");
     }
     
     public String name(){
@@ -115,6 +125,21 @@ public class Trait{
         int neg = Integer.parseInt(counts[i][1])-Integer.parseInt(counts[i][2]);
         double edible = (Integer.parseInt(counts[i][2])>=neg?1.0*neg/count(i):1.0*Integer.parseInt(counts[i][2])/count(i));
         return select*edible;
+    }
+    
+    public double Entropy(double p, double n){
+        double p1 = (p!=0 && p!=1?p*(Math.log10(Math.pow(p, -1))/Math.log10(2)):0);
+        double p2 = (n!=0 && n!=1?n*(Math.log10(Math.pow(n, -1))/Math.log10(2)):0); 
+        return p1+p2;
+    }
+    
+    public double Entropy2(double p){
+        if(p<=0 || p>=1) return 0;
+        else{
+            double v1 = Math.log(p)/Math.log(2);
+            double v2 = Math.log(1-p)/Math.log(2);
+            return -p*v1-(1-p)*v2;
+        } 
     }
 
     public String toString(){

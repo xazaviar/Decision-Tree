@@ -13,7 +13,9 @@ import java.util.Scanner;
  */
 public class Main {
     
-    static String override = "dataset.txt";
+//    static String override = "dataset.txt";
+    
+    static boolean entropy = false;
     
     /**
      * The main for the program. Takes in a datafile name
@@ -26,7 +28,7 @@ public class Main {
     public static void main(String[] args){
         ArrayList<Mushroom> mushrooms = new ArrayList<>();
         Trait[] traits = new Trait[22];
-        File dataFile = new File((override.equals("")?args[0]:override));
+        File dataFile = new File(args[0]);
         
         
         System.out.println("> LAUNCHING DECISON TREE...");
@@ -55,76 +57,41 @@ public class Main {
             for(int i = 0; i < traits.length; i++){
                 traits[i] = new Trait(mushrooms,i);
             }
+            
+            //Build tree
+            if(args[1].equals("0")){
+                System.out.println("> GENERATING TREE (probability of error)...\n");
+                Node root = DTL(mushrooms,traits,mushrooms);
+                System.out.println("> FINAL TREE (proability of error):");
+                System.out.println("-----------------------------------");
+                System.out.println("  "+root.name);
+                printTree(root,0);
+                System.out.println("  Number of nodes: "+numberOfNodes);
+                System.out.println("-----------------------------------\n");
+            }else{
+                entropy = true;
+                System.out.println("> GENERATING TREE (entropy)...");
+                Node root = DTL(mushrooms,traits,mushrooms);
+                System.out.println("> FINAL TREE (entropy):");
+                System.out.println("-----------------------------------");
+                System.out.println("  "+root.name);
+                printTree(root,0);
+                System.out.println("  Number of nodes: "+numberOfNodes);
+                System.out.println("-----------------------------------\n");
+            }
         } catch (FileNotFoundException ex) {
             System.out.println("- ERROR: Data File"+dataFile.getName()+" not found");
         }
-         
-        //Build tree
-        if(args[1].equals("0")){
-            System.out.println("> GENERATING TREE (probability of error)...");
-            //Node root = probTree(mushrooms,traits, null);
-            Node root = DTL(mushrooms,traits,mushrooms);
-            System.out.println(root.name);
-            printTree(root,0);
-            System.out.println("Number of nodes: "+numberOfNodes);
-        }else{
-            System.out.println("> GENERATING TREE (entropy)...");
-            entropyTree(mushrooms,traits);
-        }
-        
-        
         System.out.println("> CLOSING DECISON TREE...");
     }
     
     static int numberOfNodes = 1;
     private static void printTree(Node node, int i){
         for(Branch b: node.children){
-            System.out.println(String.join("", Collections.nCopies(i, "        "))+"-- "+b.name+" -> "+b.child.name); 
+            System.out.println(String.join("", Collections.nCopies(i, "        "))+"  -- "+b.name+" -> "+b.child.name); 
             numberOfNodes++;
             printTree(b.child, i+1);
         }
-    }
-    
-    public static Node probTree(ArrayList<Mushroom> mushrooms, Trait[] traits){
-        DecimalFormat df = new DecimalFormat("#.000");
-        
-        int same = allSame(mushrooms);
-        if(same!=-1){
-            return new Node((same==1?"EDIBLE":"POISONOUS"));
-        }
-        
-        if(mushrooms.size()==0)
-            System.out.println("ERROR");
-        
-        //Calculate the probability of Error per trait
-        //System.out.println("> <"+(parent!=null?parent.name:"start")+"> Trait prob ");
-        int opt = 0;
-        for(int i = 0; i < traits.length; i++){
-            if(i%4 == 0 && i!=0) System.out.println();
-            traits[i].calculate(mushrooms);
-            if(traits[i].percentError < traits[opt].percentError) opt = i;
-            System.out.print(" | "+traits[i].traitNum()+": "+df.format(traits[i].percentError));
-            
-        }
-        
-        //Select lowest error node
-        System.out.println("\n> Node selected: <"+traits[opt].traitNum()+">\n");
-        Node node = new Node(""+traits[opt].traitNum());
-        
-        //Create children branches
-        for(int i = 0; i < traits[opt].size; i++){
-            ArrayList<Mushroom> tempM = removeMushrooms(mushrooms,traits[opt],i);
-            Trait[] tempT = removeTrait(traits,opt);
-            if(tempM.size()>0)
-                node.children.add(new Branch(traits[opt].type(i),probTree(tempM,tempT)));
-//            else if(traits[opt].prob(i) == 0)
-//                node.children.add(new Branch(traits[opt].type(i),new Node("EDIBLE",node)));
-//            else if(traits[opt].prob(i) == 1)
-//                node.children.add(new Branch(traits[opt].type(i),new Node("POISONOUS",node)));
-         
-        }
-        
-        return node;
     }
     
     public static Node DTL(ArrayList<Mushroom> examples, Trait[] attr, ArrayList<Mushroom> parent_examples){
@@ -165,8 +132,9 @@ public class Main {
         for(int i = 0; i < attr.length; i++){
             if(i%4 == 0 && i!=0) System.out.println();
             attr[i].calculate(examples);
-            if(attr[i].percentError < attr[opt].percentError) opt = i;
-            System.out.print(" | "+attr[i].traitNum()+": "+df.format(attr[i].percentError));
+            if(!entropy && attr[i].percentError < attr[opt].percentError) opt = i;
+            if(entropy && attr[i].gain > attr[opt].gain) opt = i;
+            System.out.print(" | "+attr[i].traitNum()+": "+df.format((entropy?attr[i].gain:attr[i].percentError)));
             
         }
         
@@ -210,10 +178,6 @@ public class Main {
         }
         
         return ret;
-    }
-    
-    public static void entropyTree(ArrayList<Mushroom> mushrooms, Trait[] traits){
-        
     }
        
 }
