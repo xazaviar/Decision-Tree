@@ -46,23 +46,24 @@ public class Trait{
 
     public Trait(ArrayList<Mushroom> mushrooms, int trait){
         this.trait = trait;
-        counts = new String[traitOpt[trait].length][3];
-        this.size = traitOpt[trait].length;
+        //counts = new String[traitOpt[trait].length][3];
+        //this.size = traitOpt[trait].length;
         //calculateMush(mushrooms);
     }
     
     public void calculate(ArrayList<Mushroom> mushrooms){
         //Clear Counts Array
-        for(int i = 0; i < traitOpt[trait].length; i++){
-            counts[i][0] = traitOpt[trait][i];
-            counts[i][1] = "0";
-            counts[i][2] = "0";
-        }
+        counts = new String[traitOpt[trait].length][3];
         
         //Collect data
         for(Mushroom m: mushrooms){
             for(int i = 0; i < counts.length; i++){
-                if(counts[i][0].equals(m.attr[trait])){
+                if(counts[i][0]==null){
+                    counts[i][0] = m.attr[trait];
+                    counts[i][1] = "1";
+                    counts[i][2] = (m.edible?"1":"0");
+                    break;
+                }else if(counts[i][0].equals(m.attr[trait])){
                     counts[i][1] = ""+(Integer.parseInt(counts[i][1])+1);
                     counts[i][2] = (m.edible?""+(Integer.parseInt(counts[i][2])+1):""+Integer.parseInt(counts[i][2]));
                     break;
@@ -72,13 +73,19 @@ public class Trait{
 
         //Store additional data
         sum = 0;
-        for(int i = 0; i < size; i++){
+        size = 0;
+        for(int i = 0; i < counts.length; i++){
+            if(counts[i][1]==null) break;
+            size++;
             sum+=Integer.parseInt(counts[i][1]);
         }
         
+            
         //Calculate Percent error
         this.percentError = 0;
         for(int i = 0; i < size; i++){
+            
+            //if(trait==0)System.out.println(type(i)+": "+prob(i));
             this.percentError += prob(i);
         }
     }
@@ -103,8 +110,10 @@ public class Trait{
     }
     
     public double prob(int i){
-        double select = 1.0*Integer.parseInt(counts[i][1])/sum;
-        double edible = (Integer.parseInt(counts[i][2])/sum>.5?1.0*(sum-Integer.parseInt(counts[i][2]))/sum:1.0*Integer.parseInt(counts[i][2])/sum);
+        double select = 1.0*count(i)/sum;
+        
+        int neg = Integer.parseInt(counts[i][1])-Integer.parseInt(counts[i][2]);
+        double edible = (Integer.parseInt(counts[i][2])>=neg?1.0*neg/count(i):1.0*Integer.parseInt(counts[i][2])/count(i));
         return select*edible;
     }
 
@@ -114,7 +123,7 @@ public class Trait{
 
         ret+=("> Data Distribution for "+traitType[trait]+": ")+"\n";
         for(int i = 0; i < traitOpt[trait].length; i++){
-            ret+=("  -- "+counts[i][0]+": "+counts[i][1]+" ("+df.format(100.0*count(i)/sum)+"%)")+"\n";
+            ret+=("  -- "+counts[i][0]+": "+counts[i][1]+" | "+counts[i][2]+" ("+df.format(100.0*count(i)/sum)+"%)")+"\n";
         }
         ret+=("  -- total: "+(sum)+" instances")+"\n";
 
